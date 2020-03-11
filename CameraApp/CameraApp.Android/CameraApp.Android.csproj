@@ -59,8 +59,10 @@
   <ItemGroup>
     <Compile Include="Camera\CameraDroid.cs" />
     <Compile Include="Camera\CameraViewServiceRenderer.cs" />
+    <Compile Include="Camera\Listeners\CameraCaptureCallbackListener.cs" />
     <Compile Include="Camera\Listeners\CameraCaptureStateListener.cs" />
     <Compile Include="Camera\Listeners\CameraStateListener.cs" />
+    <Compile Include="Camera\Listeners\ImageAvailableListener.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

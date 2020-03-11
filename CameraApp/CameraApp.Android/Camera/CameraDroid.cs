@@ -8,6 +8,7 @@ using Android.Content;
 using Android.Graphics;
 using Android.Hardware.Camera2;
 using Android.Hardware.Camera2.Params;
+using Android.Media;
 using Android.OS;
 using Android.Runtime;
 using Android.Util;
@@ -134,12 +135,21 @@ namespace CameraApp.Droid.Camera
             SurfaceTexture texture = _cameraTexture.SurfaceTexture;
 
             texture.SetDefaultBufferSize(_previewSize.Width, _previewSize.Height);
-            Surface surface = new Surface(texture);
+            Surface previewSurface = new Surface(texture);
 
             _previewBuilder = CameraDevice.CreateCaptureRequest(CameraTemplate.Preview);
-            _previewBuilder.AddTarget(surface);
+            _previewBuilder.AddTarget(previewSurface);
 
-            CameraDevice.CreateCaptureSession(new List<Surface> { surface },
+            var imageReader = ImageReader.NewInstance(_previewSize.Width / 16, _previewSize.Height / 16, ImageFormatType.Yuv420888, 2);
+            
+            Surface frameCaptureSurface = imageReader.Surface;
+            _previewBuilder.AddTarget(frameCaptureSurface);
+
+            var thread = new HandlerThread("CameraPicture");
+            thread.Start();
+            imageReader.SetOnImageAvailableListener(new ImageAvailableListener(_context), new Handler(thread.Looper));
+
+            CameraDevice.CreateCaptureSession(new List<Surface> { previewSurface, frameCaptureSurface },
                 new CameraCaptureStateListener
                 {
                     OnConfigureFailedAction = session =>
