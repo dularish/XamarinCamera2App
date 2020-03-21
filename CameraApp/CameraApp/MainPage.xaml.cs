@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -16,6 +17,20 @@ namespace CameraApp
         public MainPage()
         {
             InitializeComponent();
+        }
+
+        private void SKCanvasView_PaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e)
+        {
+            SKImageInfo info = e.Info;
+            SKSurface surface = e.Surface;
+            SKCanvas canvas = surface.Canvas;
+
+            canvas.Clear();
+
+            SKRect rect = new SKRect(0, info.Height - info.Width, info.Width - 2, info.Height - 3);
+            
+            canvas.ClipRect(rect);
+            canvas.DrawRect(rect, new SKPaint() { Color = SKColors.Red, Style = SKPaintStyle.Stroke, StrokeWidth = 2 });
         }
     }
 }
