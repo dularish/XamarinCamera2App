@@ -9,13 +9,20 @@
 
     <StackLayout>
         <!-- Place new controls here -->
-        <Label Text="Camera preview app" 
+        <Label Text="Cats detection"  FontSize="Large" FontAttributes="Bold" TextColor="OrangeRed" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" 
            HorizontalOptions="Center" />
-        <customViews:CameraView x:Name="_cameraView" HorizontalOptions="FillAndExpand" HeightRequest="500" Camera="Front" ImageProcessingMode="CatsDetection" />
-        <StackLayout Orientation="Horizontal">
-            <Label Text="Prediction :" />
-            <Label BindingContext="{x:Reference _cameraView}" Text="{Binding ComputerVisionPrediction}" />
-        </StackLayout>
+        <customViews:CameraView x:Name="_cameraView" HorizontalOptions="FillAndExpand" HeightRequest="500" Camera="Front" ImageProcessingMode="CatsDetection"/>
+        <Grid Margin="0,20,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Label FontSize="Medium" FontAttributes="Bold" TextColor="OrangeRed" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Grid.Row="0" Grid.Column="0" Text="Prediction : " />
+            <Label FontSize="Medium" FontAttributes="Bold" TextColor="OrangeRed" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Grid.Row="0" Grid.Column="1" BindingContext="{x:Reference _cameraView}" Text="{Binding ComputerVisionPrediction}" />
+        </Grid>
     </StackLayout>
 
 </ContentPage>
