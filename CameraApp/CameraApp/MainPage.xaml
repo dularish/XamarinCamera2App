@@ -11,7 +11,11 @@
         <!-- Place new controls here -->
         <Label Text="Camera preview app" 
            HorizontalOptions="Center" />
-        <customViews:CameraView HorizontalOptions="FillAndExpand" HeightRequest="500" />
+        <customViews:CameraView x:Name="_cameraView" HorizontalOptions="FillAndExpand" HeightRequest="500" Camera="Front" ImageProcessingMode="CatsDetection" />
+        <StackLayout Orientation="Horizontal">
+            <Label Text="Prediction :" />
+            <Label BindingContext="{x:Reference _cameraView}" Text="{Binding ComputerVisionPrediction}" />
+        </StackLayout>
     </StackLayout>
 
 </ContentPage>

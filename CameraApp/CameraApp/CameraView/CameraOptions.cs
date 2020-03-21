@@ -8,4 +8,9 @@ namespace CameraApp.CameraView
     {
         Front, Rear
     }
+
+    public enum ImageProcessingMode
+    {
+        JustPreview, CatsDetection
+    }
 }

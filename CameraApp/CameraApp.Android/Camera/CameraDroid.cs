@@ -30,11 +30,14 @@ namespace CameraApp.Droid.Camera
 
         public bool IsCameraOpening { get; set; }
 
+        private ImageProcessingMode _ImageProcessingMode;
         private CameraManager _manager;
         private Size _previewSize;
         private SurfaceTexture _viewSurface;
         private CaptureRequest.Builder _previewBuilder;
         private CameraCaptureSession _previewSession;
+
+        public event EventHandler<string> PredictionUpdated;
 
         public CameraDroid(Context context) : base(context)
         {
@@ -61,7 +64,7 @@ namespace CameraApp.Droid.Camera
             Orientations.Append((int)SurfaceOrientation.Rotation270, 270);
         }
 
-        public void OpenCamera(CameraOptions cameraOptions)
+        public void OpenCamera(CameraOptions cameraOptions, ImageProcessingMode imageProcessingMode)
         {
             if(_context == null || IsCameraOpening)
             {
@@ -70,7 +73,7 @@ namespace CameraApp.Droid.Camera
             else
             {
                 IsCameraOpening = true;
-
+                _ImageProcessingMode = imageProcessingMode;
                 _manager = (CameraManager)_context.GetSystemService(Context.CameraService);
 
                 var cameraId = _manager.GetCameraIdList()[(int)cameraOptions];
@@ -147,7 +150,7 @@ namespace CameraApp.Droid.Camera
 
             var thread = new HandlerThread("CameraPicture");
             thread.Start();
-            imageReader.SetOnImageAvailableListener(new ImageAvailableListener(_context), new Handler(thread.Looper));
+            imageReader.SetOnImageAvailableListener(new ImageAvailableListener(_context, inputString => PredictionUpdated?.Invoke(this, inputString), _ImageProcessingMode), new Handler(thread.Looper));
 
             CameraDevice.CreateCaptureSession(new List<Surface> { previewSurface, frameCaptureSurface },
                 new CameraCaptureStateListener

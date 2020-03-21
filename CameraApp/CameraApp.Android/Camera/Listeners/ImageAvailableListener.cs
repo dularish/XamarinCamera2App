@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 using Android.App;
@@ -13,9 +14,11 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using CameraApp.CameraView;
 using Java.Interop;
 using Java.IO;
 using Java.Nio;
+using MathNet.Numerics.LinearAlgebra;
 using OpenCvSharp;
 
 namespace CameraApp.Droid.Camera.Listeners
@@ -23,17 +26,34 @@ namespace CameraApp.Droid.Camera.Listeners
     public class ImageAvailableListener : Java.Lang.Object, ImageReader.IOnImageAvailableListener
     {
         private Context _context;
+        private Action<string> _predictionGeneratedCallback;
+        private ImageProcessingMode _imageProcessingMode;
+        private NeuralNetwork.Model _neuralNetModel;
 
-        public ImageAvailableListener(Context context)
+        public ImageAvailableListener(Context context, Action<string> predictionGenCallback, ImageProcessingMode imageProcessingMode)
         {
             this._context = context;
+            _predictionGeneratedCallback = predictionGenCallback;
+            _imageProcessingMode = imageProcessingMode;
+            switch (imageProcessingMode)
+            {
+                case ImageProcessingMode.JustPreview:
+                    break;
+                case ImageProcessingMode.CatsDetection:
+                    var assembly = IntrospectionExtensions.GetTypeInfo(this.GetType()).Assembly;
+                    var stream = assembly.GetManifestResourceStream("CameraApp.Droid.MLDependencies.Models.CatsDetectionModel.xml");
+                    _neuralNetModel = HelperFunctionsForML.deserializeModelFromStream<NeuralNetwork.Model>(stream);
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void OnImageAvailable(ImageReader reader)
         {
             Image image = reader.AcquireLatestImage();
 
-            if (image != null)
+            if (image != null && _imageProcessingMode != ImageProcessingMode.JustPreview)
             {
                 Mat rgbMat = getRGBMatMethod1(image);
                 Mat subMat = squareTheMatrix(rgbMat);
@@ -41,7 +61,14 @@ namespace CameraApp.Droid.Camera.Listeners
                 Mat resizedMat = resizeMat(subMatRotated, 64, 64);
                 byte[] subMatRotatedBytes = getAllPixelBytes(resizedMat);
                 //Use the above bytes for input to Machine Learning
-
+                var imageMat = Matrix<double>.Build.DenseOfRowArrays(new double[][] { subMatRotatedBytes.Select(s => (double)s).ToArray() });
+                imageMat = imageMat / 255.0;
+                imageMat = imageMat.Transpose();
+                if(_neuralNetModel != null)
+                {
+                    var preds = NeuralNetwork.predictClass(imageMat, _neuralNetModel.TrainedParams);
+                    _predictionGeneratedCallback.Invoke(preds[0, 0].ToString());
+                }
             }
 
             image?.Close();

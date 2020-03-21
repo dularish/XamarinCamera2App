@@ -35,20 +35,27 @@ namespace CameraApp.Droid.Camera
 
             bool isPermissionAvailable = getCameraPermissionStatus();
             _camera = new CameraDroid(Context);
+            _camera.PredictionUpdated += ((sender,newPrediction) => 
+            {
+                if(e.NewElement != null)
+                {
+                    e.NewElement.ComputerVisionPrediction = newPrediction;
+                }
+            });
             CameraOptions cameraOption = e.NewElement?.Camera ?? CameraOptions.Rear;
 
             if(Control == null)
             {
                 if (isPermissionAvailable)
                 {
-                    _camera.OpenCamera(cameraOption);
+                    _camera.OpenCamera(cameraOption, e.NewElement.ImageProcessingMode);
                     SetNativeControl(_camera);
                 }
                 else
                 {
                     MainActivity.CameraPermissionsGranted += (s, args) =>
                     {
-                        _camera.OpenCamera(cameraOption);
+                        _camera.OpenCamera(cameraOption, e.NewElement.ImageProcessingMode);
                         SetNativeControl(_camera);
                     };
                 }

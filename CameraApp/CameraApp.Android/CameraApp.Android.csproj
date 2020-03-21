@@ -44,6 +44,21 @@
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MachineLearningFSharp">
+      <HintPath>MLDependencies\lib\MachineLearningFSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>MLDependencies\lib\MathNet.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics.Data.Text">
+      <HintPath>MLDependencies\lib\MathNet.Numerics.Data.Text.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics.FSharp">
+      <HintPath>MLDependencies\lib\MathNet.Numerics.FSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="MLDatasets">
+      <HintPath>MLDependencies\lib\MLDatasets.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Android" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -121,6 +136,17 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\values\strings.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="MLDependencies\lib\FSharp.Core.dll" />
+    <Content Include="MLDependencies\lib\MachineLearningFSharp.dll" />
+    <Content Include="MLDependencies\lib\MathNet.Numerics.Data.Text.dll" />
+    <Content Include="MLDependencies\lib\MathNet.Numerics.dll" />
+    <Content Include="MLDependencies\lib\MathNet.Numerics.FSharp.dll" />
+    <Content Include="MLDependencies\lib\MLDatasets.dll" />
+    <EmbeddedResource Include="MLDependencies\Models\CatsDetectionModel.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>
