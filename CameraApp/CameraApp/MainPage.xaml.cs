@@ -19,18 +19,14 @@ namespace CameraApp
             InitializeComponent();
         }
 
-        private void SKCanvasView_PaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e)
+        private async void _justPreviewBtn_Clicked(object sender, EventArgs e)
         {
-            SKImageInfo info = e.Info;
-            SKSurface surface = e.Surface;
-            SKCanvas canvas = surface.Canvas;
+            await Navigation.PushAsync(new PreviewPredictionPage(CameraView.ImageProcessingMode.JustPreview));
+        }
 
-            canvas.Clear();
-
-            SKRect rect = new SKRect(0, info.Height - info.Width, info.Width - 2, info.Height - 3);
-            
-            canvas.ClipRect(rect);
-            canvas.DrawRect(rect, new SKPaint() { Color = SKColors.Red, Style = SKPaintStyle.Stroke, StrokeWidth = 2 });
+        private async void _catsDetectionPageBtn_Clicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new PreviewPredictionPage(CameraView.ImageProcessingMode.CatsDetection));
         }
     }
 }

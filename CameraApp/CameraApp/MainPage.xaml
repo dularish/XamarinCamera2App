@@ -3,30 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:customViews="clr-namespace:CameraApp.CameraView" 
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              mc:Ignorable="d"
+             Title="Camera modes"
              x:Class="CameraApp.MainPage">
-
-    <StackLayout>
-        <!-- Place new controls here -->
-        <Label Text="Cats detection"  FontSize="Large" FontAttributes="Bold" TextColor="OrangeRed" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" 
-           HorizontalOptions="Center" />
-        <Grid>
-            <customViews:CameraView x:Name="_cameraView" HorizontalOptions="FillAndExpand" HeightRequest="500" Camera="Front" ImageProcessingMode="JustPreview"/>
-            <skia:SKCanvasView PaintSurface="SKCanvasView_PaintSurface" />
-        </Grid>
-        <Grid Margin="0,20,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Label FontSize="Medium" FontAttributes="Bold" TextColor="OrangeRed" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Grid.Row="0" Grid.Column="0" Text="Prediction : " />
-            <Label FontSize="Medium" FontAttributes="Bold" TextColor="OrangeRed" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Grid.Row="0" Grid.Column="1" BindingContext="{x:Reference _cameraView}" Text="{Binding ComputerVisionPrediction}" />
-        </Grid>
-    </StackLayout>
-
+    <ScrollView VerticalOptions="Center">
+        <StackLayout Orientation="Vertical">
+            <Button x:Name="_justPreviewBtn" Text="Just Preview" Clicked="_justPreviewBtn_Clicked" />
+            <Button x:Name="_catsDetectionPageBtn" Text="Cats detection" Clicked="_catsDetectionPageBtn_Clicked" />
+        </StackLayout>
+    </ScrollView>
 </ContentPage>
