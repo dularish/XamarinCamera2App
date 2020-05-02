@@ -28,5 +28,10 @@ namespace CameraApp
         {
             await Navigation.PushAsync(new PreviewPredictionPage(CameraView.ImageProcessingMode.CatsDetection));
         }
+
+        private async void _mnistPageBtn_Clicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new PreviewPredictionPage(CameraView.ImageProcessingMode.MNIST));
+        }
     }
 }

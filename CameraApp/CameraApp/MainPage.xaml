@@ -10,6 +10,7 @@
         <StackLayout Orientation="Vertical">
             <Button x:Name="_justPreviewBtn" Text="Just Preview" Clicked="_justPreviewBtn_Clicked" />
             <Button x:Name="_catsDetectionPageBtn" Text="Cats detection" Clicked="_catsDetectionPageBtn_Clicked" />
+            <Button x:Name="_mnistPageBtn" Text="MNIST" Clicked="_mnistPageBtn_Clicked" />
         </StackLayout>
     </ScrollView>
 </ContentPage>

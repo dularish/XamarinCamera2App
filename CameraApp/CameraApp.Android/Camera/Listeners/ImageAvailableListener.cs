@@ -15,11 +15,13 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using CameraApp.CameraView;
+using CameraApp.Droid.MachineLearning.Tensorflow;
 using Java.Interop;
 using Java.IO;
 using Java.Nio;
 using MathNet.Numerics.LinearAlgebra;
 using OpenCvSharp;
+using Xamarin.Forms;
 
 namespace CameraApp.Droid.Camera.Listeners
 {
@@ -27,13 +29,16 @@ namespace CameraApp.Droid.Camera.Listeners
     {
         private Context _context;
         private Action<string> _predictionGeneratedCallback;
+        private Action<ImageSource> _processedImagePreviewChangedCallback;
         private ImageProcessingMode _imageProcessingMode;
         private NeuralNetwork.Model _neuralNetModel;
+        private TensorflowImageClassifier _tfClassifier;
 
-        public ImageAvailableListener(Context context, Action<string> predictionGenCallback, ImageProcessingMode imageProcessingMode)
+        public ImageAvailableListener(Context context, Action<string> predictionGenCallback, Action<Xamarin.Forms.ImageSource> processedImagePreviewChangedCallback, ImageProcessingMode imageProcessingMode)
         {
             this._context = context;
             _predictionGeneratedCallback = predictionGenCallback;
+            _processedImagePreviewChangedCallback = processedImagePreviewChangedCallback;
             _imageProcessingMode = imageProcessingMode;
             switch (imageProcessingMode)
             {
@@ -44,6 +49,11 @@ namespace CameraApp.Droid.Camera.Listeners
                     var stream = assembly.GetManifestResourceStream("CameraApp.Droid.MLDependencies.Models.CatsDetectionModel.xml");
                     _neuralNetModel = HelperFunctionsForML.deserializeModelFromStream<NeuralNetwork.Model>(stream);
                     break;
+                case ImageProcessingMode.MNIST:
+                    var assetDescriptor = Android.App.Application.Context.Assets.OpenFd("mnist_conv.tflite");
+                    var labels = Enumerable.Range(0, 10).Select(s => s.ToString()).ToList();
+                    _tfClassifier = new TensorflowImageClassifier(assetDescriptor, labels);
+                    break;
                 default:
                     break;
             }
@@ -51,23 +61,46 @@ namespace CameraApp.Droid.Camera.Listeners
 
         public void OnImageAvailable(ImageReader reader)
         {
-            Image image = reader.AcquireLatestImage();
+            Android.Media.Image image = reader.AcquireLatestImage();
 
             if (image != null && _imageProcessingMode != ImageProcessingMode.JustPreview)
             {
                 Mat rgbMat = getRGBMatMethod1(image);
                 Mat subMat = squareTheMatrix(rgbMat);
-                Mat subMatRotated = rotateMatrix90DegCCW(subMat);
-                Mat resizedMat = resizeMat(subMatRotated, 64, 64);
-                byte[] subMatRotatedBytes = getAllPixelBytes(resizedMat);
-                //Use the above bytes for input to Machine Learning
-                var imageMat = Matrix<double>.Build.DenseOfRowArrays(new double[][] { subMatRotatedBytes.Select(s => (double)s).ToArray() });
-                imageMat = imageMat / 255.0;
-                imageMat = imageMat.Transpose();
-                if(_neuralNetModel != null)
+                //Mat subMatRotatedCCW = rotateMatrix90DegCCW(subMat);
+                Mat subMatRotatedCW = rotateMatrix90DegCW(subMat);
+               
+                if(_imageProcessingMode == ImageProcessingMode.CatsDetection && _neuralNetModel != null)
                 {
+                    Mat resizedMat = resizeMat(subMatRotatedCW, 64, 64);
+                    byte[] subMatRotatedBytes = getAllPixelBytes(resizedMat);
+                    //Use the above bytes for input to Machine Learning
+                    var imageMat = Matrix<double>.Build.DenseOfRowArrays(new double[][] { subMatRotatedBytes.Select(s => (double)s).ToArray() });
+                    imageMat = imageMat / 255.0;
+                    imageMat = imageMat.Transpose();
+
                     var preds = NeuralNetwork.predictClass(imageMat, _neuralNetModel.TrainedParams);
                     _predictionGeneratedCallback.Invoke(preds[0, 0].ToString());
+                }
+                else if(_imageProcessingMode == ImageProcessingMode.MNIST && _tfClassifier != null)
+                {
+                    var intermediate = new Mat();
+                    
+                    Mat grayscaleMat = subMatRotatedCW.CvtColor(ColorConversionCodes.RGB2GRAY);
+                    Cv2.GaussianBlur(grayscaleMat, grayscaleMat, new OpenCvSharp.Size(7, 7), 2, 2);
+                    Cv2.AdaptiveThreshold(grayscaleMat, intermediate, 255, AdaptiveThresholdTypes.GaussianC, ThresholdTypes.BinaryInv, 5, 5);
+                    Mat element1 = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(9, 9));
+                    Cv2.Dilate(intermediate, intermediate, element1);
+                    Mat element2 = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3));
+                    Cv2.Erode(intermediate, intermediate, element2);
+
+                    Mat resizedMat = resizeMat(intermediate, _tfClassifier.ImageHeight, _tfClassifier.ImageWidth);
+
+                    string prediction = _tfClassifier.Classify(resizedMat);
+                    _predictionGeneratedCallback.Invoke(prediction);
+                    byte[] byteArray = resizedMat.ToBytes();
+                    System.IO.Stream stream = new MemoryStream(byteArray);
+                    _processedImagePreviewChangedCallback.Invoke(ImageSource.FromStream(() => stream));
                 }
             }
 
@@ -76,7 +109,7 @@ namespace CameraApp.Droid.Camera.Listeners
 
         private static Mat resizeMat(Mat subMatRotated, int rows, int cols)
         {
-            return subMatRotated.Resize(new Size(cols, rows));
+            return subMatRotated.Resize(new OpenCvSharp.Size(cols, rows));
         }
 
         [Obsolete("Logic looked promising but doesn't work, dev must spend more time on this when available")]
@@ -86,12 +119,12 @@ namespace CameraApp.Droid.Camera.Listeners
         /// <param name="image"></param>
         /// <param name="isGreyOnly"></param>
         /// <returns></returns>
-        public static Mat convertYuv420888ToRGBMatMethod2(Image image, bool isGreyOnly)
+        public static Mat convertYuv420888ToRGBMatMethod2(Android.Media.Image image, bool isGreyOnly)
         {
             int width = image.Width;
             int height = image.Height;
 
-            Image.Plane yPlane = image.GetPlanes()[0];
+            Android.Media.Image.Plane yPlane = image.GetPlanes()[0];
             int ySize = yPlane.Buffer.Remaining();
 
             if (isGreyOnly)
@@ -105,8 +138,8 @@ namespace CameraApp.Droid.Camera.Listeners
                 return greyMat;
             }
 
-            Image.Plane uPlane = image.GetPlanes()[1];
-            Image.Plane vPlane = image.GetPlanes()[2];
+            Android.Media.Image.Plane uPlane = image.GetPlanes()[1];
+            Android.Media.Image.Plane vPlane = image.GetPlanes()[2];
 
             // be aware that this size does not include the padding at the end, if there is any
             // (e.g. if pixel stride is 2 the size is ySize / 2 - 1)
@@ -155,7 +188,7 @@ namespace CameraApp.Droid.Camera.Listeners
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
-        private static byte[] getJpegForYuv420888(Image image)
+        private static byte[] getJpegForYuv420888(Android.Media.Image image)
         {
             byte[] nv21bytes = YUV420toNV21(image);
             byte[] jpegBytes = NV21toJPEG(nv21bytes, image.Width, image.Height, 100);
@@ -189,6 +222,19 @@ namespace CameraApp.Droid.Camera.Listeners
             return outputBytes;
         }
 
+        private Mat rotateMatrix90DegCW(Mat mat)
+        {
+            if (mat.Rows != mat.Cols)
+            {
+                throw new NotImplementedException("To add more logic and test more for rectangular images");
+            }
+            Point2f sourceCenter = new Point2f((float)(mat.Cols / 2.0), (float)(mat.Rows / 2.0));
+            Mat rotationMatrix = Cv2.GetRotationMatrix2D(sourceCenter, -90, 1.0);
+            Mat rotatedMat = new Mat(mat.Height, mat.Width, mat.Type());
+            Cv2.WarpAffine(mat, rotatedMat, rotationMatrix, mat.Size());
+            return rotatedMat;
+        }
+
         private static Mat rotateMatrix90DegCCW(Mat mat)
         {
             if(mat.Rows != mat.Cols)
@@ -202,7 +248,7 @@ namespace CameraApp.Droid.Camera.Listeners
             return rotatedMat;
         }
 
-        private static Mat getRGBMatMethod1(Image image)
+        private static Mat getRGBMatMethod1(Android.Media.Image image)
         {
             var yuvMat = getYuvMatForImage(image);
             
@@ -217,7 +263,7 @@ namespace CameraApp.Droid.Camera.Listeners
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
-        public static Mat getYuvMatForImage(Image image)
+        public static Mat getYuvMatForImage(Android.Media.Image image)
         {
             ByteBuffer buffer;
             int rowStride;
@@ -226,7 +272,7 @@ namespace CameraApp.Droid.Camera.Listeners
             int height = image.Height;
             int offset = 0;
 
-            Image.Plane[] planes = image.GetPlanes();
+            Android.Media.Image.Plane[] planes = image.GetPlanes();
             byte[] data = new byte[image.Width * image.Height * ImageFormat.GetBitsPerPixel(ImageFormatType.Yuv420888) / 8];
             byte[] rowData = new byte[planes[0].RowStride];
 
@@ -299,13 +345,13 @@ namespace CameraApp.Droid.Camera.Listeners
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
-        private static byte[] YUV420toNV21(Image image)
+        private static byte[] YUV420toNV21(Android.Media.Image image)
         {
             Android.Graphics.Rect crop = image.CropRect;
             ImageFormatType format = image.Format;
             int width = crop.Width();
             int height = crop.Height();
-            Image.Plane[] planes = image.GetPlanes();
+            Android.Media.Image.Plane[] planes = image.GetPlanes();
             byte[] data = new byte[width * height * ImageFormat.GetBitsPerPixel(format) / 8];
             byte[] rowData = new byte[planes[0].RowStride];
 

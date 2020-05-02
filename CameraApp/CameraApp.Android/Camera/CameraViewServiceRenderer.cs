@@ -42,6 +42,13 @@ namespace CameraApp.Droid.Camera
                     e.NewElement.ComputerVisionPrediction = newPrediction;
                 }
             });
+            _camera.ProcessedImagePreviewUpdated += ((sender, newImageSource) =>
+            {
+                if (e.NewElement != null)
+                {
+                    e.NewElement.ProcessedImagePreview = newImageSource;
+                }
+            });
             CameraOptions cameraOption = e.NewElement?.Camera ?? CameraOptions.Rear;
 
             if(Control == null)

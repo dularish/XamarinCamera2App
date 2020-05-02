@@ -38,6 +38,7 @@ namespace CameraApp.Droid.Camera
         private CameraCaptureSession _previewSession;
 
         public event EventHandler<string> PredictionUpdated;
+        public event EventHandler<Xamarin.Forms.ImageSource> ProcessedImagePreviewUpdated;
 
         public CameraDroid(Context context) : base(context)
         {
@@ -150,7 +151,7 @@ namespace CameraApp.Droid.Camera
 
             var thread = new HandlerThread("CameraPicture");
             thread.Start();
-            imageReader.SetOnImageAvailableListener(new ImageAvailableListener(_context, inputString => PredictionUpdated?.Invoke(this, inputString), _ImageProcessingMode), new Handler(thread.Looper));
+            imageReader.SetOnImageAvailableListener(new ImageAvailableListener(_context, inputString => PredictionUpdated?.Invoke(this, inputString), newImageSource => ProcessedImagePreviewUpdated?.Invoke(this, newImageSource), _ImageProcessingMode), new Handler(thread.Looper));
 
             CameraDevice.CreateCaptureSession(new List<Surface> { previewSurface, frameCaptureSurface },
                 new CameraCaptureStateListener

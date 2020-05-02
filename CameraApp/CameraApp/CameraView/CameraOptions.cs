@@ -11,6 +11,6 @@ namespace CameraApp.CameraView
 
     public enum ImageProcessingMode
     {
-        JustPreview, CatsDetection
+        JustPreview, CatsDetection, MNIST
     }
 }

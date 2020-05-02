@@ -15,6 +15,10 @@
             <Grid>
                 <Label HorizontalOptions="Center" VerticalOptions="Center" Text="Loading Preview..." />
                 <customViews:CameraView x:Name="_cameraView" HorizontalOptions="FillAndExpand" HeightRequest="500" Camera="Front" ImageProcessingMode="{Binding ImageProcessingMode}"/>
+                <Frame BorderColor="ForestGreen" HorizontalOptions="StartAndExpand" VerticalOptions="StartAndExpand" HeightRequest="100" WidthRequest="100" IsClippedToBounds="False" Margin="5" Padding="2" IsVisible="{Binding IsProcessedImageVisible}" >
+                    <Image  Aspect="Fill" HorizontalOptions="Fill" VerticalOptions="Fill" x:Name="_imageSource" BindingContext="{x:Reference _cameraView}" Source="{Binding ProcessedImagePreview}" />
+                </Frame>
+                
                 <skia:SKCanvasView PaintSurface="SKCanvasView_PaintSurface" />
             </Grid>
             <Grid Margin="0,10,0,0" x:Name="_predictionLabelGrid" IsVisible="{Binding IsPredictionLabelGridVisible}">

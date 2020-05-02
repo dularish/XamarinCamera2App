@@ -73,6 +73,9 @@
     </PackageReference>
     <PackageReference Include="Xamarin.Forms" Version="4.3.0.908675" />
     <PackageReference Include="Xamarin.Essentials" Version="1.3.1" />
+    <PackageReference Include="Xamarin.TensorFlow.Lite">
+      <Version>1.14.0</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera\CameraDroid.cs" />
@@ -81,6 +84,7 @@
     <Compile Include="Camera\Listeners\CameraCaptureStateListener.cs" />
     <Compile Include="Camera\Listeners\CameraStateListener.cs" />
     <Compile Include="Camera\Listeners\ImageAvailableListener.cs" />
+    <Compile Include="MachineLearning\Tensorflow\TensorflowImageClassifier.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -98,6 +102,12 @@
     <AndroidNativeLibrary Include="lib\x86_64\libOpenCvSharpExtern.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+    <AndroidAsset Include="Assets\mnist_conv.tflite">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidAsset>
+    <AndroidAsset Include="Assets\mnist_testing_dataset.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidAsset>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
     <None Include="Properties\AndroidManifest.xml" />

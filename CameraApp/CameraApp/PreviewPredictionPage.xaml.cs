@@ -33,8 +33,6 @@ namespace CameraApp
         public static readonly BindableProperty IsPredictionLabelGridVisibleProperty =
             BindableProperty.Create("IsPredictionLabelGridVisible", typeof(bool), typeof(PreviewPredictionPage), false);
 
-
-
         public ImageProcessingMode ImageProcessingMode
         {
             get { return (ImageProcessingMode)GetValue(ImageProcessingModeProperty); }
@@ -43,6 +41,18 @@ namespace CameraApp
 
         public static readonly BindableProperty ImageProcessingModeProperty =
             BindableProperty.Create("ImageProcessingMode", typeof(ImageProcessingMode), typeof(PreviewPredictionPage), ImageProcessingMode.JustPreview);
+
+
+        public bool IsProcessedImageVisible
+        {
+            get { return (bool)GetValue(IsProcessedImageVisibleProperty); }
+            set { SetValue(IsProcessedImageVisibleProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for IsProcessedImageVisible.  This enables animation, styling, binding, etc...
+        public static readonly BindableProperty IsProcessedImageVisibleProperty =
+            BindableProperty.Create("IsProcessedImageVisible", typeof(bool), typeof(PreviewPredictionPage), false);
+
 
 
         public PreviewPredictionPage(ImageProcessingMode imageProcessingMode)
@@ -60,6 +70,11 @@ namespace CameraApp
                     PageTitle = "Cats detection";
                     IsPredictionLabelGridVisible = true;
                     break;
+                case ImageProcessingMode.MNIST:
+                    PageTitle = "MNIST";
+                    IsPredictionLabelGridVisible = true;
+                    IsProcessedImageVisible = true;
+                    break;
                 default:
                     break;
             }
@@ -73,7 +88,8 @@ namespace CameraApp
 
             canvas.Clear();
 
-            SKRect rect = new SKRect(0, info.Height - info.Width, info.Width - 2, info.Height - 3);
+            //SKRect rect = new SKRect(0, info.Height - info.Width, info.Width - 2, info.Height - 3);//When the active area is the bottom part
+            SKRect rect = new SKRect(0, 0, info.Width - 2, info.Width);//When active area is top part
 
             canvas.ClipRect(rect);
             canvas.DrawRect(rect, new SKPaint() { Color = SKColors.Red, Style = SKPaintStyle.Stroke, StrokeWidth = 2 });

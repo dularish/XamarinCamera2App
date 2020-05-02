@@ -37,6 +37,16 @@ namespace CameraApp.CameraView
         public static readonly BindableProperty ImageProcessingModeProperty =
             BindableProperty.Create("ImageProcessingMode", typeof(ImageProcessingMode), typeof(CameraView), ImageProcessingMode.JustPreview);
 
+        public ImageSource ProcessedImagePreview
+        {
+            get { return (ImageSource)GetValue(ProcessedImagePreviewProperty); }
+            set { SetValue(ProcessedImagePreviewProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for TopLeftImage.  This enables animation, styling, binding, etc...
+        public static readonly BindableProperty ProcessedImagePreviewProperty =
+            BindableProperty.Create("ProcessedImagePreview", typeof(ImageSource), typeof(PreviewPredictionPage), null);
+
 
     }
 }
